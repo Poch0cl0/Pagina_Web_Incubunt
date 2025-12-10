@@ -1,0 +1,821 @@
+openapi: 3.0.3
+info:
+  title: INCUBUNT API - Supabase REST
+  description: |
+    API REST para el sistema INCUBUNT. Esta API está basada en Supabase PostgREST
+    y proporciona acceso a todas las tablas de la base de datos.
+    
+    ## Autenticación
+    Todas las peticiones requieren los siguientes headers:
+    - apikey (header requerido)
+    - Authorization (Bearer token)
+    - Content-Type (application/json)
+    
+  version: 1.0.0
+  contact:
+    name: INCUBUNT
+    email: contacto@incubunt.com
+
+servers:
+  - url: https://wcfrjziadxhxqdwdqfnb.supabase.co/rest/v1
+    description: Servidor de producción Supabase
+
+tags:
+  - name: Sponsors
+    description: Endpoints para gestionar auspiciadores y sponsors
+  - name: Volunteers
+    description: Endpoints para gestionar voluntarios
+  - name: News
+    description: Endpoints para gestionar noticias, proyectos y comunidad
+  - name: Awards
+    description: Endpoints para gestionar premios y reconocimientos
+  - name: FAQs
+    description: Endpoints para gestionar preguntas frecuentes
+
+paths:
+  # ============================================
+  # SPONSORS
+  # ============================================
+  /sponsors:
+    get:
+      tags:
+        - Sponsors
+      summary: Obtener todos los sponsors
+      description: Retorna una lista de todos los sponsors registrados
+      operationId: getSponsors
+      parameters:
+        - name: select
+          in: query
+          description: Campos a seleccionar (usar * para todos)
+          schema:
+            type: string
+            default: "*"
+        - name: order
+          in: query
+          description: "Ordenamiento (ej: created_at.desc)"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de sponsors obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sponsor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    post:
+      tags:
+        - Sponsors
+      summary: Crear un nuevo sponsor
+      description: Registra un nuevo auspiciador o sponsor en el sistema
+      operationId: createSponsor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SponsorInsert'
+            example:
+              nombres: "María"
+              apellidos: "González López"
+              email: "maria@empresa.com"
+              celular: "912345678"
+              empresa: "Innovation Corp"
+              tipo_promocion: "Auspiciador"
+              mensaje: "Queremos apoyar a los emprendedores"
+      responses:
+        '201':
+          description: Sponsor creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sponsor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sponsors/{id}:
+    get:
+      tags:
+        - Sponsors
+      summary: Obtener un sponsor por ID
+      operationId: getSponsorById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Sponsor encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sponsor'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    patch:
+      tags:
+        - Sponsors
+      summary: Actualizar un sponsor
+      operationId: updateSponsor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SponsorUpdate'
+      responses:
+        '200':
+          description: Sponsor actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sponsor'
+    
+    delete:
+      tags:
+        - Sponsors
+      summary: Eliminar un sponsor
+      operationId: deleteSponsor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Sponsor eliminado exitosamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # VOLUNTEERS
+  # ============================================
+  /volunteers:
+    get:
+      tags:
+        - Volunteers
+      summary: Obtener todos los voluntarios
+      description: Retorna una lista de todos los voluntarios registrados
+      operationId: getVolunteers
+      parameters:
+        - name: select
+          in: query
+          schema:
+            type: string
+            default: "*"
+        - name: area_interes
+          in: query
+          description: Filtrar por área de interés
+          schema:
+            type: string
+            enum: [PMO, MKT, LOGISTICA, SIGE, GTH, TI]
+      responses:
+        '200':
+          description: Lista de voluntarios obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Volunteer'
+    
+    post:
+      tags:
+        - Volunteers
+      summary: Crear un nuevo voluntario
+      description: Registra un nuevo voluntario en el sistema
+      operationId: createVolunteer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerInsert'
+            example:
+              nombres: "Carlos"
+              apellidos: "Rodríguez"
+              email: "carlos@unt.edu.pe"
+              celular: "987654321"
+              universidad: "Universidad Nacional de Trujillo"
+              ciclo: "VIII"
+              carrera: "Ingeniería de Sistemas"
+              area_interes: "TI"
+      responses:
+        '201':
+          description: Voluntario creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Volunteer'
+
+  /volunteers/{id}:
+    get:
+      tags:
+        - Volunteers
+      summary: Obtener un voluntario por ID
+      operationId: getVolunteerById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Voluntario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Volunteer'
+
+  # ============================================
+  # NEWS ITEMS
+  # ============================================
+  /news_items:
+    get:
+      tags:
+        - News
+      summary: Obtener todas las noticias
+      description: Retorna todas las noticias, proyectos y contenido de comunidad ordenadas por fecha
+      operationId: getNewsItems
+      parameters:
+        - name: select
+          in: query
+          schema:
+            type: string
+            default: "*"
+        - name: category
+          in: query
+          description: Filtrar por categoría
+          schema:
+            type: string
+            enum: [PROYECTOS, COMUNIDAD, NOTICIAS]
+        - name: order
+          in: query
+          description: "Ordenamiento (ej: date.desc)"
+          schema:
+            type: string
+            default: "date.desc"
+      responses:
+        '200':
+          description: Lista de noticias obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsItem'
+    
+    post:
+      tags:
+        - News
+      summary: Crear una nueva noticia
+      description: Crea una nueva noticia, proyecto o contenido de comunidad
+      operationId: createNewsItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsItemInsert'
+            example:
+              title: "INCUBUNT lanza nuevo programa de mentoría"
+              slug: "incubunt-lanza-nuevo-programa-mentoria"
+              description: "El centro universitario anuncia su programa de mentoría 2025"
+              content: "Contenido completo del artículo..."
+              image_url: "/images/News/noticia-ejemplo.jpg"
+              date: "2025-01-15"
+              category: "NOTICIAS"
+      responses:
+        '201':
+          description: Noticia creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsItem'
+
+  /news_items/{slug}:
+    get:
+      tags:
+        - News
+      summary: Obtener una noticia por slug
+      description: Obtiene una noticia específica usando su slug único
+      operationId: getNewsItemBySlug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: select
+          in: query
+          schema:
+            type: string
+            default: "*"
+      responses:
+        '200':
+          description: Noticia encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsItem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # AWARDS
+  # ============================================
+  /awards:
+    get:
+      tags:
+        - Awards
+      summary: Obtener todos los premios
+      description: Retorna todos los premios y reconocimientos ordenados por año
+      operationId: getAwards
+      parameters:
+        - name: select
+          in: query
+          schema:
+            type: string
+            default: "*"
+        - name: order
+          in: query
+          description: "Ordenamiento (ej: year.desc)"
+          schema:
+            type: string
+            default: "year.desc"
+      responses:
+        '200':
+          description: Lista de premios obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Award'
+    
+    post:
+      tags:
+        - Awards
+      summary: Crear un nuevo premio
+      operationId: createAward
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AwardInsert'
+            example:
+              title: "Premio a la Innovación 2025"
+              description: "Reconocimiento al mejor proyecto innovador del año"
+              image_url: "/images/Awards/premio-innovacion.jpg"
+              year: 2025
+      responses:
+        '201':
+          description: Premio creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Award'
+
+  /awards/{id}:
+    get:
+      tags:
+        - Awards
+      summary: Obtener un premio por ID
+      operationId: getAwardById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Premio encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Award'
+
+  # ============================================
+  # FAQs
+  # ============================================
+  /faqs:
+    get:
+      tags:
+        - FAQs
+      summary: Obtener todas las preguntas frecuentes
+      description: Retorna todas las FAQs ordenadas por order_num
+      operationId: getFAQs
+      parameters:
+        - name: select
+          in: query
+          schema:
+            type: string
+            default: "*"
+        - name: order
+          in: query
+          description: "Ordenamiento (ej: order_num.asc)"
+          schema:
+            type: string
+            default: "order_num.asc"
+      responses:
+        '200':
+          description: Lista de FAQs obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FAQ'
+    
+    post:
+      tags:
+        - FAQs
+      summary: Crear una nueva FAQ
+      operationId: createFAQ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FAQInsert'
+            example:
+              question: "¿Cómo puedo participar en INCUBUNT?"
+              answer: "Puedes participar inscribiéndote en nuestras convocatorias abiertas..."
+              order_num: 1
+      responses:
+        '201':
+          description: FAQ creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FAQ'
+
+  /faqs/{id}:
+    get:
+      tags:
+        - FAQs
+      summary: Obtener una FAQ por ID
+      operationId: getFAQById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: FAQ encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FAQ'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: apikey
+      description: Tu clave anónima de Supabase
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer token con tu clave anónima
+
+  schemas:
+    Sponsor:
+      type: object
+      properties:
+        id_sponsor:
+          type: integer
+          format: int64
+          description: ID único del sponsor
+        nombres:
+          type: string
+          example: "Juan"
+        apellidos:
+          type: string
+          example: "Pérez García"
+        email:
+          type: string
+          format: email
+          example: "juan@empresa.com"
+        celular:
+          type: string
+          nullable: true
+          example: "987654321"
+        empresa:
+          type: string
+          example: "Tech Solutions"
+        tipo_promocion:
+          type: string
+          enum: [Auspiciador, Sponsor]
+          example: "Sponsor"
+        mensaje:
+          type: string
+          nullable: true
+          example: "Interesado en patrocinar eventos"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+
+    SponsorInsert:
+      type: object
+      required:
+        - nombres
+        - apellidos
+        - email
+        - empresa
+        - tipo_promocion
+      properties:
+        nombres:
+          type: string
+        apellidos:
+          type: string
+        email:
+          type: string
+          format: email
+        celular:
+          type: string
+          nullable: true
+        empresa:
+          type: string
+        tipo_promocion:
+          type: string
+          enum: [Auspiciador, Sponsor]
+        mensaje:
+          type: string
+          nullable: true
+
+    SponsorUpdate:
+      type: object
+      properties:
+        nombres:
+          type: string
+        apellidos:
+          type: string
+        email:
+          type: string
+          format: email
+        celular:
+          type: string
+          nullable: true
+        empresa:
+          type: string
+        tipo_promocion:
+          type: string
+          enum: [Auspiciador, Sponsor]
+        mensaje:
+          type: string
+          nullable: true
+
+    Volunteer:
+      type: object
+      properties:
+        id_volunteer:
+          type: integer
+          format: int64
+        nombres:
+          type: string
+        apellidos:
+          type: string
+        email:
+          type: string
+          format: email
+        celular:
+          type: string
+          nullable: true
+        universidad:
+          type: string
+          nullable: true
+        ciclo:
+          type: string
+          nullable: true
+        carrera:
+          type: string
+          nullable: true
+        area_interes:
+          type: string
+          enum: [PMO, MKT, LOGISTICA, SIGE, GTH, TI]
+        created_at:
+          type: string
+          format: date-time
+
+    VolunteerInsert:
+      type: object
+      required:
+        - nombres
+        - apellidos
+        - email
+        - area_interes
+      properties:
+        nombres:
+          type: string
+        apellidos:
+          type: string
+        email:
+          type: string
+          format: email
+        celular:
+          type: string
+          nullable: true
+        universidad:
+          type: string
+          nullable: true
+        ciclo:
+          type: string
+          nullable: true
+        carrera:
+          type: string
+          nullable: true
+        area_interes:
+          type: string
+          enum: [PMO, MKT, LOGISTICA, SIGE, GTH, TI]
+
+    NewsItem:
+      type: object
+      properties:
+        id_news:
+          type: integer
+          format: int64
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        content:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date
+        category:
+          type: string
+          enum: [PROYECTOS, COMUNIDAD, NOTICIAS]
+        created_at:
+          type: string
+          format: date-time
+
+    NewsItemInsert:
+      type: object
+      required:
+        - title
+        - slug
+        - date
+        - category
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        content:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date
+        category:
+          type: string
+          enum: [PROYECTOS, COMUNIDAD, NOTICIAS]
+
+    Award:
+      type: object
+      properties:
+        id_award:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        year:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    AwardInsert:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        year:
+          type: integer
+          nullable: true
+
+    FAQ:
+      type: object
+      properties:
+        id_faq:
+          type: integer
+          format: int64
+        question:
+          type: string
+        answer:
+          type: string
+        order_num:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    FAQInsert:
+      type: object
+      required:
+        - question
+        - answer
+        - order_num
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+        order_num:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: string
+          nullable: true
+        hint:
+          type: string
+          nullable: true
+
+  responses:
+    BadRequest:
+      description: Solicitud inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Unauthorized:
+      description: No autorizado - Verifica tus credenciales
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []

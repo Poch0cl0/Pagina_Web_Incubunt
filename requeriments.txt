@@ -1,0 +1,49 @@
+# ============================================
+# INCUBUNT Web - Requisitos del Proyecto
+# ============================================
+
+# REQUISITOS DEL SISTEMA
+Node.js >= 18.0.0
+npm >= 9.0.0
+Git
+
+# DEPENDENCIAS NPM (Producción)
+@supabase/supabase-js@^2.86.2
+next@16.0.7
+postcss@^8.5.6
+react@19.2.0
+react-dom@19.2.0
+redoc@^2.5.2
+swagger-ui@^5.30.3
+swagger-ui-react@^5.30.3
+yaml@^2.3.4
+
+# DEPENDENCIAS NPM (Desarrollo)
+@tailwindcss/postcss@^4.1.17
+@types/node@^20
+@types/react@^19
+@types/react-dom@^19
+@types/swagger-ui-react@^5.0.0
+eslint@^9
+eslint-config-next@16.0.7
+tailwindcss@^4.1.17
+typescript@^5
+
+# VARIABLES DE ENTORNO REQUERIDAS
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+# BASE DE DATOS
+Supabase Account
+- Tabla: news_items
+- Tabla: sponsors
+- Tabla: volunteers
+- Tabla: awards
+- Tabla: faqs
+- Políticas RLS configuradas
+
+# ARCHIVOS DE CONFIGURACIÓN
+.env.local (crear manualmente)
+tsconfig.json
+next.config.ts
+postcss.config.mjs
