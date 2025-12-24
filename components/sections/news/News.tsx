@@ -19,7 +19,6 @@ export const News: React.FC = () => {
                     <Image
                         src="/images/News/imagen-noticias.jpg"
                         alt="Grupo de estudiantes"
-                        fill
                         className="object-cover shadow-md"
                     />
                 </div>
@@ -77,7 +76,6 @@ export const News: React.FC = () => {
                     <Image
                         src="/images/News/imagen-noticias.jpg"
                         alt="Grupo de estudiantes"
-                        fill
                         className="object-cover shadow-md"
                     />
                 </div>
@@ -135,7 +133,6 @@ export const News: React.FC = () => {
                         <Image
                             src="/images/News/imagen-noticias.jpg"
                             alt="Grupo de estudiantes"
-                            fill
                             className="object-cover shadow-md"
                         />
                     </div>
