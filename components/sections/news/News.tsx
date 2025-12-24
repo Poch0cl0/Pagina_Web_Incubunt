@@ -1,9 +1,26 @@
 ﻿"use client";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { newsService } from "@/services/newsService";
 
 export const News: React.FC = () => {
     const router = useRouter();
+    const [latestNewsImage, setLatestNewsImage] = useState<string>("/images/News/imagen-noticias.jpg");
+
+    useEffect(() => {
+        const fetchLatestNews = async () => {
+            try {
+                const news = await newsService.getAll();
+                if (news.length > 0 && news[0].image_url) {
+                    setLatestNewsImage(news[0].image_url);
+                }
+            } catch (error) {
+                console.error("Error fetching news:", error);
+            }
+        };
+        fetchLatestNews();
+    }, []);
 
     const handleNavigation = (path: string) => {
         router.push(path);
@@ -17,7 +34,7 @@ export const News: React.FC = () => {
             <div className="hidden md:block lg:hidden">
                 <div className="w-full relative h-[400px]">
                     <Image
-                        src="/images/News/imagen-noticias.jpg"
+                        src={latestNewsImage}
                         alt="Grupo de estudiantes"
                         className="object-cover shadow-md"
                         fill
@@ -75,7 +92,7 @@ export const News: React.FC = () => {
 
                 <div className="w-full relative h-[300px]">
                     <Image
-                        src="/images/News/imagen-noticias.jpg"
+                        src={latestNewsImage}
                         alt="Grupo de estudiantes"
                         className="object-cover shadow-md"
                         fill
@@ -133,7 +150,7 @@ export const News: React.FC = () => {
                     {/* foto */}
                     <div className="w-full lg:w-3/5 order-1 lg:order-2 relative h-[400px] md:h-[500px] lg:h-[690px] z-0">
                         <Image
-                            src="/images/News/imagen-noticias.jpg"
+                            src={latestNewsImage}
                             alt="Grupo de estudiantes"
                             className="object-cover shadow-md"
                             fill

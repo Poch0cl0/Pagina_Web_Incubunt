@@ -1,5 +1,5 @@
 
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { News } from './News'
 import { useRouter } from 'next/navigation'
@@ -10,7 +10,24 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('next/image', () => ({
     __esModule: true,
-    default: (props: any) => <img {...props} />
+    default: ({ fill, ...props }: any) => <img {...props} />
+}))
+
+jest.mock('@/services/newsService', () => ({
+    newsService: {
+        getAll: jest.fn().mockResolvedValue([
+            {
+                id_news: 1,
+                title: "Noticia Mock",
+                slug: "noticia-mock",
+                description: "Desc",
+                image_url: "/mock.jpg",
+                date: "2024-01-01",
+                category: "NOTICIAS"
+            }
+        ]),
+        getByCategory: jest.fn().mockResolvedValue([])
+    }
 }))
 
 describe('News section', () => {
@@ -23,8 +40,16 @@ describe('News section', () => {
             })
     })
 
-    test('renderiza títulos y secciones principales', () => {
+    test('renderiza títulos y secciones principales', async () => {
         render(<News />)
+
+        // Wait for state update to complete by checking for the mocked image URL
+        // Using waitFor because we need to check an attribute change on existing elements
+        await waitFor(() => {
+            const images = screen.getAllByRole('img', { name: "Grupo de estudiantes" })
+            expect(images.length).toBeGreaterThan(0)
+            expect(images[0]).toHaveAttribute('src', '/mock.jpg')
+        })
 
         // Title exists in multiple views (mobile/desktop), using getAllByRole or specific queries if needed.
         // Using getAll to be safe against responsive duplicates in DOM.

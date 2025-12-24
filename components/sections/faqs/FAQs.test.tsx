@@ -6,8 +6,14 @@ jest.mock('./components/DropDownQuestion', () => ({
     DropDownQuestion: () => <div data-testid="dropdown-questions">Questions List</div>
 }))
 
+jest.mock('@/services/faqsService', () => ({
+    faqsService: {
+        getAll: jest.fn().mockResolvedValue([])
+    }
+}))
+
 describe('FAQs section', () => {
-    test('renderiza el título y componente de preguntas', () => {
+    test('renderiza el título y componente de preguntas', async () => {
         render(<FAQs />)
 
         expect(
@@ -15,6 +21,8 @@ describe('FAQs section', () => {
         ).toBeInTheDocument()
 
         expect(screen.getByText(/encuentra aquí las respuestas/i)).toBeInTheDocument()
-        expect(screen.getByTestId('dropdown-questions')).toBeInTheDocument()
+
+        // Wait for the async effect
+        expect(await screen.findByTestId('dropdown-questions')).toBeInTheDocument()
     })
 })

@@ -1,29 +1,32 @@
 import AwardImage from "./AwardImage";
 import AwardPopUp from "./AwardPopUp";
-import { awardsData } from "../data/awards";
+import type { Award } from "@/types/database.types";
 
-export const AwardDesktopGrid = () => (
+export const AwardDesktopGrid = ({ awards }: { awards: Award[] }) => (
   <div
     className="
-      hidden lg:grid 
-      pt-28 
-      w-full max-w-[90rem]  /* antes: max-w-screen-xl */
-      mx-auto justify-center 
-      gap-10 xl:gap-14 
+      hidden lg:grid
+      pt-28
+      w-full max-w-[90rem]
+      mx-auto justify-center
+      gap-10 xl:gap-14
       grid-cols-3 place-items-center
     "
   >
-    {awardsData.slice(0, 3).map((award) => (
+    {awards.slice(0, 3).map((award) => (
       <AwardImage
-        key={award.id}
-        image={award.image}
+        key={award.id_award}
+        image={{
+          src: award.image_url || "/images/placeholder.png",
+          alt: award.title,
+        }}
         isSelected={false}
-        onClick={() => {}}
+        onClick={() => { }}
         popup={
           <AwardPopUp
-            id={award.id.toString()}
+            id={award.id_award.toString()}
             title={award.title}
-            text={award.description}
+            text={award.description || ""}
           />
         }
         desktop

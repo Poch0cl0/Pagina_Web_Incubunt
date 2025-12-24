@@ -1,7 +1,24 @@
-﻿import { DropDownQuestion } from "./components/DropDownQuestion";
-import { questionsData } from "./data/questions";
+﻿"use client";
+import { useEffect, useState } from "react";
+import { DropDownQuestion } from "./components/DropDownQuestion";
+import { faqsService } from "@/services/faqsService";
+import type { FAQ } from "@/types/database.types";
 
 export const FAQs = () => {
+    const [questions, setQuestions] = useState<FAQ[]>([]);
+
+    useEffect(() => {
+        const fetchFAQs = async () => {
+            try {
+                const data = await faqsService.getAll();
+                setQuestions(data);
+            } catch (error) {
+                console.error("Error fetching FAQs:", error);
+            }
+        };
+        fetchFAQs();
+    }, []);
+
     return (
         <section className="flex items-center bg-gradient-to-r from-[#002B4F] via-[#04477e] to-[#0452c0] text-white py-16">
             <div className="max-w-[1440px] mx-auto px-6 md:px-10 flex flex-col lg:flex-row lg:items-start space-y-12 lg:space-y-0 lg:space-x-20">
@@ -33,7 +50,7 @@ export const FAQs = () => {
 
                 {/* Sección derecha */}
                 <div className="w-full lg:w-2/3">
-                    <DropDownQuestion data={questionsData} />
+                    <DropDownQuestion data={questions} />
                 </div>
             </div>
         </section>

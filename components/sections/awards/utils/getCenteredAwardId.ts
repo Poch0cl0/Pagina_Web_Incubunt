@@ -1,6 +1,8 @@
+import type { Award } from "@/types/database.types";
+
 export const getCenteredAwardId = (
     container: HTMLDivElement,
-    awards: typeof import("../data/awards").awardsData
+    awards: Award[]
 ): number | null => {
     let closestId: number | null = null;
     let closestDistance = Infinity;
@@ -13,7 +15,7 @@ export const getCenteredAwardId = (
 
         if (distance < closestDistance) {
             closestDistance = distance;
-            closestId = awards[index].id;
+            closestId = awards[index].id_award;
         }
     });
 

@@ -1,23 +1,33 @@
 ﻿"use client";
 import { useState, useRef, useEffect } from "react";
-import { awardsData } from "./data/awards";
+import { awardsService } from "@/services/awardService";
+import type { Award } from "@/types/database.types";
 import { AwardDesktopGrid } from "./components/AwardDesktopGrid";
 import { AwardMobileCarousel } from "./components/AwardMobileCarousel";
 import { getCenteredAwardId } from "./utils/getCenteredAwardId";
 
 export const Awards = () => {
+    const [awards, setAwards] = useState<Award[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    useEffect(() => {
+        const fetchAwards = async () => {
+            try {
+                const data = await awardsService.getAll();
+                setAwards(data);
+            } catch (error) {
+                console.error("Error fetching awards:", error);
+            }
+        };
+        fetchAwards();
+    }, []);
+
     const handleScroll = () => {
-        if (!containerRef.current) return;
-        const centeredId = getCenteredAwardId(containerRef.current, awardsData);
+        if (!containerRef.current || awards.length === 0) return;
+        const centeredId = getCenteredAwardId(containerRef.current, awards);
         if (centeredId !== null) setSelectedId(centeredId);
     };
-
-    useEffect(() => {
-        handleScroll();
-    }, []);
 
     return (
         <section
@@ -56,12 +66,13 @@ export const Awards = () => {
             tracking-wide
           "
                 >
-                    3 PREMIOS EN CONCEPMI
+                    {awards.length} PREMIOS EN CONCEPMI
                 </h2>
             </div>
 
             {/* Carrusel móvil */}
             <AwardMobileCarousel
+                awards={awards}
                 selectedId={selectedId}
                 setSelectedId={setSelectedId}
                 containerRef={containerRef}
@@ -69,7 +80,7 @@ export const Awards = () => {
             />
 
             {/* Grid desktop */}
-            <AwardDesktopGrid />
+            <AwardDesktopGrid awards={awards} />
         </section>
     );
 };

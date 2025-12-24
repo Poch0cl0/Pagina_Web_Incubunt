@@ -1,10 +1,12 @@
 "use client";
 import { useState, useRef } from "react";
 
+import type { FAQ } from "@/types/database.types";
+
 export const DropDownQuestion = ({
   data,
 }: {
-  data: Array<{ question: string; answer: string }>;
+  data: FAQ[];
 }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const contentRefs = useRef<Array<HTMLDivElement | null>>([]);

@@ -1,13 +1,15 @@
 import AwardImage from "./AwardImage";
 import AwardPopUp from "./AwardPopUp";
-import { awardsData } from "../data/awards";
+import type { Award } from "@/types/database.types";
 
 export const AwardMobileCarousel = ({
+    awards,
     selectedId,
     setSelectedId,
     containerRef,
     handleScroll,
 }: {
+    awards: Award[];
     selectedId: number | null;
     setSelectedId: React.Dispatch<React.SetStateAction<number | null>>;
     containerRef: React.RefObject<HTMLDivElement | null>;
@@ -19,18 +21,21 @@ export const AwardMobileCarousel = ({
             onScroll={handleScroll}
             className="relative z-10 flex w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 md:gap-6 px-4"
         >
-            {awardsData.map((award) => (
+            {awards.map((award) => (
                 <AwardImage
-                    key={award.id}
-                    image={award.image}
-                    isSelected={award.id === selectedId}
-                    onClick={() => setSelectedId(award.id)}
+                    key={award.id_award}
+                    image={{
+                        src: award.image_url || "/images/placeholder.png",
+                        alt: award.title,
+                    }}
+                    isSelected={award.id_award === selectedId}
+                    onClick={() => setSelectedId(award.id_award)}
                     popup={
-                        award.id === selectedId ? (
+                        award.id_award === selectedId ? (
                             <AwardPopUp
-                                id={award.id.toString()}
+                                id={award.id_award.toString()}
                                 title={award.title}
-                                text={award.description}
+                                text={award.description || ""}
                             />
                         ) : undefined
                     }
