@@ -5,11 +5,22 @@ info:
     API REST para el sistema INCUBUNT. Esta API está basada en Supabase PostgREST
     y proporciona acceso a todas las tablas de la base de datos.
     
+    ## Cómo funciona PostgREST
+    
+    ⚠️ **IMPORTANTE**: PostgREST NO soporta rutas REST estilo `/resource/{id}`.
+    En su lugar, usa parámetros de query para filtrar.
+    
+    - ✅ Correcto: `GET /sponsors?id_sponsor=eq.1`
+    - ❌ Incorrecto: `GET /sponsors/1`
+    
+    Para operaciones por ID, siempre usa el formato: `{nombre_columna}=eq.{valor}`
+    
     ## Autenticación
     Todas las peticiones requieren los siguientes headers:
-    - apikey (header requerido)
-    - Authorization (Bearer token)
-    - Content-Type (application/json)
+    - apikey: Tu clave anónima de Supabase
+    - Authorization: Bearer token con tu clave anónima
+    - Content-Type: application/json
+    - Prefer: return=representation (opcional, para recibir el objeto creado/actualizado)
     
   version: 1.0.0
   contact:
@@ -34,36 +45,56 @@ tags:
 
 paths:
   # ============================================
-  # SPONSORS
+  # SPONSORS - CRUD Completo
   # ============================================
   /sponsors:
     get:
       tags:
         - Sponsors
-      summary: Obtener todos los sponsors
-      description: Retorna una lista de todos los sponsors registrados
+      summary: Listar todos los sponsors o filtrar por ID
+      description: |
+        Obtiene una lista de sponsors. Para obtener uno específico, usa el parámetro id_sponsor=eq.{id}
+        Ejemplo: GET /sponsors?id_sponsor=eq.1
       operationId: getSponsors
       parameters:
         - name: select
           in: query
-          description: Campos a seleccionar (usar * para todos)
+          description: "Campos a seleccionar (ej: *, id_sponsor,nombres,email)"
           schema:
             type: string
             default: "*"
-        - name: order
+        - name: id_sponsor
           in: query
-          description: "Ordenamiento (ej: created_at.desc)"
+          description: "Filtrar por ID del sponsor (ej: eq.1, in.(1,2,3))"
           schema:
             type: string
+          example: "eq.1"
+        - name: order
+          in: query
+          description: "Ordenamiento (ej: created_at.desc, nombres.asc)"
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Limitar número de resultados
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: Número de registros a saltar
+          schema:
+            type: integer
       responses:
         '200':
-          description: Lista de sponsors obtenida exitosamente
+          description: Lista de sponsors obtenida exitosamente (puede ser un array o un solo objeto)
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Sponsor'
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Sponsor'
+                  - $ref: '#/components/schemas/Sponsor'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -73,7 +104,7 @@ paths:
       tags:
         - Sponsors
       summary: Crear un nuevo sponsor
-      description: Registra un nuevo auspiciador o sponsor en el sistema
+      description: Crea un nuevo registro de sponsor en la base de datos
       operationId: createSponsor
       requestBody:
         required: true
@@ -95,107 +126,171 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Sponsor'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sponsor'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
-  /sponsors/{id}:
-    get:
-      tags:
-        - Sponsors
-      summary: Obtener un sponsor por ID
-      operationId: getSponsorById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Sponsor encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Sponsor'
-        '404':
-          $ref: '#/components/responses/NotFound'
     
     patch:
       tags:
         - Sponsors
-      summary: Actualizar un sponsor
-      operationId: updateSponsor
+      summary: Actualizar uno o varios sponsors
+      description: |
+        Actualiza sponsors usando filtros. Para actualizar uno específico, usa id_sponsor=eq.{id}
+        Ejemplo: PATCH /sponsors?id_sponsor=eq.1
+      operationId: updateSponsors
       parameters:
-        - name: id
-          in: path
+        - name: id_sponsor
+          in: query
           required: true
+          description: "Filtrar por ID del sponsor (ej: eq.1)"
           schema:
-            type: integer
+            type: string
+          example: "eq.1"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/SponsorUpdate'
+            example:
+              mensaje: "Mensaje actualizado"
+              celular: "987654321"
       responses:
         '200':
-          description: Sponsor actualizado exitosamente
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Sponsor'
-    
-    delete:
-      tags:
-        - Sponsors
-      summary: Eliminar un sponsor
-      operationId: deleteSponsor
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '204':
-          description: Sponsor eliminado exitosamente
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  # ============================================
-  # VOLUNTEERS
-  # ============================================
-  /volunteers:
-    get:
-      tags:
-        - Volunteers
-      summary: Obtener todos los voluntarios
-      description: Retorna una lista de todos los voluntarios registrados
-      operationId: getVolunteers
-      parameters:
-        - name: select
-          in: query
-          schema:
-            type: string
-            default: "*"
-        - name: area_interes
-          in: query
-          description: Filtrar por área de interés
-          schema:
-            type: string
-            enum: [PMO, MKT, LOGISTICA, SIGE, GTH, TI]
-      responses:
-        '200':
-          description: Lista de voluntarios obtenida exitosamente
+          description: Sponsor(s) actualizado(s) exitosamente
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Volunteer'
+                  $ref: '#/components/schemas/Sponsor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    put:
+      tags:
+        - Sponsors
+      summary: Reemplazar completamente uno o varios sponsors
+      description: |
+        Reemplaza sponsors usando filtros. Para reemplazar uno específico, usa id_sponsor=eq.{id}
+        Ejemplo: PUT /sponsors?id_sponsor=eq.1
+      operationId: replaceSponsors
+      parameters:
+        - name: id_sponsor
+          in: query
+          required: true
+          description: "Filtrar por ID del sponsor (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SponsorInsert'
+      responses:
+        '200':
+          description: Sponsor(s) actualizado(s) exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sponsor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    delete:
+      tags:
+        - Sponsors
+      summary: Eliminar uno o varios sponsors
+      description: |
+        Elimina sponsors usando filtros. Para eliminar uno específico, usa id_sponsor=eq.{id}
+        Ejemplo: DELETE /sponsors?id_sponsor=eq.1
+      operationId: deleteSponsors
+      parameters:
+        - name: id_sponsor
+          in: query
+          required: true
+          description: "Filtrar por ID del sponsor (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+      responses:
+        '204':
+          description: Sponsor(s) eliminado(s) exitosamente
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # VOLUNTEERS - CRUD Completo
+  # ============================================
+  /volunteers:
+    get:
+      tags:
+        - Volunteers
+      summary: Listar todos los voluntarios o filtrar por ID
+      description: |
+        Obtiene una lista de voluntarios. Para obtener uno específico, usa el parámetro id_volunteer=eq.{id}
+        Ejemplo: GET /volunteers?id_volunteer=eq.1
+      operationId: getVolunteers
+      parameters:
+        - name: select
+          in: query
+          description: "Campos a seleccionar (ej: *, id_volunteer,nombres,email)"
+          schema:
+            type: string
+            default: "*"
+        - name: id_volunteer
+          in: query
+          description: "Filtrar por ID del voluntario (ej: eq.1, in.(1,2,3))"
+          schema:
+            type: string
+          example: "eq.1"
+        - name: order
+          in: query
+          description: "Ordenamiento (ej: created_at.desc, nombres.asc)"
+          schema:
+            type: string
+        - name: area_interes
+          in: query
+          description: "Filtrar por área de interés (ej: eq.TI, in.(TI,PMO))"
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de voluntarios obtenida exitosamente (puede ser un array o un solo objeto)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Volunteer'
+                  - $ref: '#/components/schemas/Volunteer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     
     post:
       tags:
@@ -224,65 +319,178 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Volunteer'
-
-  /volunteers/{id}:
-    get:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Volunteer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    patch:
       tags:
         - Volunteers
-      summary: Obtener un voluntario por ID
-      operationId: getVolunteerById
+      summary: Actualizar uno o varios voluntarios
+      description: |
+        Actualiza voluntarios usando filtros. Para actualizar uno específico, usa id_volunteer=eq.{id}
+        Ejemplo: PATCH /volunteers?id_volunteer=eq.1
+      operationId: updateVolunteers
       parameters:
-        - name: id
-          in: path
+        - name: id_volunteer
+          in: query
           required: true
+          description: "Filtrar por ID del voluntario (ej: eq.1)"
           schema:
-            type: integer
+            type: string
+          example: "eq.1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerUpdate'
+            example:
+              ciclo: "IX"
+              carrera: "Ingeniería de Sistemas"
       responses:
         '200':
-          description: Voluntario encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Volunteer'
-
-  # ============================================
-  # NEWS ITEMS
-  # ============================================
-  /news_items:
-    get:
-      tags:
-        - News
-      summary: Obtener todas las noticias
-      description: Retorna todas las noticias, proyectos y contenido de comunidad ordenadas por fecha
-      operationId: getNewsItems
-      parameters:
-        - name: select
-          in: query
-          schema:
-            type: string
-            default: "*"
-        - name: category
-          in: query
-          description: Filtrar por categoría
-          schema:
-            type: string
-            enum: [PROYECTOS, COMUNIDAD, NOTICIAS]
-        - name: order
-          in: query
-          description: "Ordenamiento (ej: date.desc)"
-          schema:
-            type: string
-            default: "date.desc"
-      responses:
-        '200':
-          description: Lista de noticias obtenida exitosamente
+          description: Voluntario(s) actualizado(s) exitosamente
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/NewsItem'
+                  $ref: '#/components/schemas/Volunteer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    put:
+      tags:
+        - Volunteers
+      summary: Reemplazar completamente uno o varios voluntarios
+      description: |
+        Reemplaza voluntarios usando filtros. Para reemplazar uno específico, usa id_volunteer=eq.{id}
+        Ejemplo: PUT /volunteers?id_volunteer=eq.1
+      operationId: replaceVolunteers
+      parameters:
+        - name: id_volunteer
+          in: query
+          required: true
+          description: "Filtrar por ID del voluntario (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerInsert'
+      responses:
+        '200':
+          description: Voluntario(s) actualizado(s) exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Volunteer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    delete:
+      tags:
+        - Volunteers
+      summary: Eliminar uno o varios voluntarios
+      description: |
+        Elimina voluntarios usando filtros. Para eliminar uno específico, usa id_volunteer=eq.{id}
+        Ejemplo: DELETE /volunteers?id_volunteer=eq.1
+      operationId: deleteVolunteers
+      parameters:
+        - name: id_volunteer
+          in: query
+          required: true
+          description: "Filtrar por ID del voluntario (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+      responses:
+        '204':
+          description: Voluntario(s) eliminado(s) exitosamente
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # NEWS ITEMS - CRUD Completo
+  # ============================================
+  /news_items:
+    get:
+      tags:
+        - News
+      summary: Listar todas las noticias o filtrar por ID o slug
+      description: |
+        Obtiene todas las noticias, proyectos y contenido de comunidad. 
+        Para obtener una específica, usa id_news=eq.{id} o slug=eq.{slug}
+        Ejemplo: GET /news_items?id_news=eq.1 o GET /news_items?slug=eq.mi-slug
+      operationId: getNewsItems
+      parameters:
+        - name: select
+          in: query
+          description: "Campos a seleccionar (ej: *, id_news,title,slug)"
+          schema:
+            type: string
+            default: "*"
+        - name: id_news
+          in: query
+          description: "Filtrar por ID de la noticia (ej: eq.1, in.(1,2,3))"
+          schema:
+            type: string
+          example: "eq.1"
+        - name: slug
+          in: query
+          description: "Filtrar por slug (ej: eq.incubunt-lanza-nuevo-programa-mentoria)"
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: "Ordenamiento (ej: date.desc, created_at.asc)"
+          schema:
+            type: string
+            default: "date.desc"
+        - name: category
+          in: query
+          description: "Filtrar por categoría (ej: eq.NOTICIAS, in.(NOTICIAS,PROYECTOS))"
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de noticias obtenida exitosamente (puede ser un array o un solo objeto)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/NewsItem'
+                  - $ref: '#/components/schemas/NewsItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     
     post:
       tags:
@@ -310,72 +518,191 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NewsItem'
-
-  /news_items/{slug}:
-    get:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    patch:
       tags:
         - News
-      summary: Obtener una noticia por slug
-      description: Obtiene una noticia específica usando su slug único
-      operationId: getNewsItemBySlug
+      summary: Actualizar una o varias noticias
+      description: |
+        Actualiza noticias usando filtros. Para actualizar una específica, usa id_news=eq.{id} o slug=eq.{slug}
+        Ejemplo: PATCH /news_items?id_news=eq.1
+      operationId: updateNewsItems
       parameters:
-        - name: slug
-          in: path
+        - name: id_news
+          in: query
           required: true
+          description: "Filtrar por ID de la noticia (ej: eq.1)"
           schema:
             type: string
-        - name: select
+          example: "eq.1"
+        - name: slug
           in: query
+          required: false
+          description: "Filtrar por slug (ej: eq.mi-slug)"
           schema:
             type: string
-            default: "*"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsItemUpdate'
+            example:
+              title: "Título actualizado"
+              description: "Descripción actualizada"
       responses:
         '200':
-          description: Noticia encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NewsItem'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  # ============================================
-  # AWARDS
-  # ============================================
-  /awards:
-    get:
-      tags:
-        - Awards
-      summary: Obtener todos los premios
-      description: Retorna todos los premios y reconocimientos ordenados por año
-      operationId: getAwards
-      parameters:
-        - name: select
-          in: query
-          schema:
-            type: string
-            default: "*"
-        - name: order
-          in: query
-          description: "Ordenamiento (ej: year.desc)"
-          schema:
-            type: string
-            default: "year.desc"
-      responses:
-        '200':
-          description: Lista de premios obtenida exitosamente
+          description: Noticia(s) actualizada(s) exitosamente
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Award'
+                  $ref: '#/components/schemas/NewsItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    put:
+      tags:
+        - News
+      summary: Reemplazar completamente una o varias noticias
+      description: |
+        Reemplaza noticias usando filtros. Para reemplazar una específica, usa id_news=eq.{id} o slug=eq.{slug}
+        Ejemplo: PUT /news_items?id_news=eq.1
+      operationId: replaceNewsItems
+      parameters:
+        - name: id_news
+          in: query
+          required: true
+          description: "Filtrar por ID de la noticia (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+        - name: slug
+          in: query
+          required: false
+          description: "Filtrar por slug (ej: eq.mi-slug)"
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsItemInsert'
+      responses:
+        '200':
+          description: Noticia(s) actualizada(s) exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    delete:
+      tags:
+        - News
+      summary: Eliminar una o varias noticias
+      description: |
+        Elimina noticias usando filtros. Para eliminar una específica, usa id_news=eq.{id} o slug=eq.{slug}
+        Ejemplo: DELETE /news_items?id_news=eq.1
+      operationId: deleteNewsItems
+      parameters:
+        - name: id_news
+          in: query
+          required: true
+          description: "Filtrar por ID de la noticia (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+        - name: slug
+          in: query
+          required: false
+          description: "Filtrar por slug (ej: eq.mi-slug)"
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Noticia(s) eliminada(s) exitosamente
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # AWARDS - CRUD Completo
+  # ============================================
+  /awards:
+    get:
+      tags:
+        - Awards
+      summary: Listar todos los premios o filtrar por ID
+      description: |
+        Obtiene todos los premios y reconocimientos. Para obtener uno específico, usa el parámetro id_award=eq.{id}
+        Ejemplo: GET /awards?id_award=eq.1
+      operationId: getAwards
+      parameters:
+        - name: select
+          in: query
+          description: "Campos a seleccionar (ej: *, id_award,title,year)"
+          schema:
+            type: string
+            default: "*"
+        - name: id_award
+          in: query
+          description: "Filtrar por ID del premio (ej: eq.1, in.(1,2,3))"
+          schema:
+            type: string
+          example: "eq.1"
+        - name: order
+          in: query
+          description: "Ordenamiento (ej: year.desc, created_at.asc)"
+          schema:
+            type: string
+            default: "year.desc"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de premios obtenida exitosamente (puede ser un array o un solo objeto)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Award'
+                  - $ref: '#/components/schemas/Award'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     
     post:
       tags:
         - Awards
       summary: Crear un nuevo premio
+      description: Crea un nuevo premio o reconocimiento
       operationId: createAward
       requestBody:
         required: true
@@ -394,64 +721,173 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Award'
-
-  /awards/{id}:
-    get:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Award'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    patch:
       tags:
         - Awards
-      summary: Obtener un premio por ID
-      operationId: getAwardById
+      summary: Actualizar uno o varios premios
+      description: |
+        Actualiza premios usando filtros. Para actualizar uno específico, usa id_award=eq.{id}
+        Ejemplo: PATCH /awards?id_award=eq.1
+      operationId: updateAwards
       parameters:
-        - name: id
-          in: path
+        - name: id_award
+          in: query
           required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Premio encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Award'
-
-  # ============================================
-  # FAQs
-  # ============================================
-  /faqs:
-    get:
-      tags:
-        - FAQs
-      summary: Obtener todas las preguntas frecuentes
-      description: Retorna todas las FAQs ordenadas por order_num
-      operationId: getFAQs
-      parameters:
-        - name: select
-          in: query
+          description: "Filtrar por ID del premio (ej: eq.1)"
           schema:
             type: string
-            default: "*"
-        - name: order
-          in: query
-          description: "Ordenamiento (ej: order_num.asc)"
-          schema:
-            type: string
-            default: "order_num.asc"
+          example: "eq.1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AwardUpdate'
+            example:
+              description: "Descripción actualizada"
+              year: 2026
       responses:
         '200':
-          description: Lista de FAQs obtenida exitosamente
+          description: Premio(s) actualizado(s) exitosamente
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/FAQ'
+                  $ref: '#/components/schemas/Award'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    put:
+      tags:
+        - Awards
+      summary: Reemplazar completamente uno o varios premios
+      description: |
+        Reemplaza premios usando filtros. Para reemplazar uno específico, usa id_award=eq.{id}
+        Ejemplo: PUT /awards?id_award=eq.1
+      operationId: replaceAwards
+      parameters:
+        - name: id_award
+          in: query
+          required: true
+          description: "Filtrar por ID del premio (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AwardInsert'
+      responses:
+        '200':
+          description: Premio(s) actualizado(s) exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Award'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    delete:
+      tags:
+        - Awards
+      summary: Eliminar uno o varios premios
+      description: |
+        Elimina premios usando filtros. Para eliminar uno específico, usa id_award=eq.{id}
+        Ejemplo: DELETE /awards?id_award=eq.1
+      operationId: deleteAwards
+      parameters:
+        - name: id_award
+          in: query
+          required: true
+          description: "Filtrar por ID del premio (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+      responses:
+        '204':
+          description: Premio(s) eliminado(s) exitosamente
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # FAQs - CRUD Completo
+  # ============================================
+  /faqs:
+    get:
+      tags:
+        - FAQs
+      summary: Listar todas las preguntas frecuentes o filtrar por ID
+      description: |
+        Obtiene todas las FAQs. Para obtener una específica, usa el parámetro id_faq=eq.{id}
+        Ejemplo: GET /faqs?id_faq=eq.1
+      operationId: getFAQs
+      parameters:
+        - name: select
+          in: query
+          description: "Campos a seleccionar (ej: *, id_faq,question,answer)"
+          schema:
+            type: string
+            default: "*"
+        - name: id_faq
+          in: query
+          description: "Filtrar por ID de la FAQ (ej: eq.1, in.(1,2,3))"
+          schema:
+            type: string
+          example: "eq.1"
+        - name: order
+          in: query
+          description: "Ordenamiento (ej: order_num.asc, created_at.desc)"
+          schema:
+            type: string
+            default: "order_num.asc"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de FAQs obtenida exitosamente (puede ser un array o un solo objeto)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/FAQ'
+                  - $ref: '#/components/schemas/FAQ'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     
     post:
       tags:
         - FAQs
       summary: Crear una nueva FAQ
+      description: Crea una nueva pregunta frecuente
       operationId: createFAQ
       requestBody:
         required: true
@@ -469,27 +905,112 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FAQ'
-
-  /faqs/{id}:
-    get:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FAQ'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    patch:
       tags:
         - FAQs
-      summary: Obtener una FAQ por ID
-      operationId: getFAQById
+      summary: Actualizar una o varias FAQs
+      description: |
+        Actualiza FAQs usando filtros. Para actualizar una específica, usa id_faq=eq.{id}
+        Ejemplo: PATCH /faqs?id_faq=eq.1
+      operationId: updateFAQs
       parameters:
-        - name: id
-          in: path
+        - name: id_faq
+          in: query
           required: true
+          description: "Filtrar por ID de la FAQ (ej: eq.1)"
           schema:
-            type: integer
+            type: string
+          example: "eq.1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FAQUpdate'
+            example:
+              question: "Pregunta actualizada"
+              order_num: 2
       responses:
         '200':
-          description: FAQ encontrada
+          description: FAQ(s) actualizada(s) exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FAQ'
+                type: array
+                items:
+                  $ref: '#/components/schemas/FAQ'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    put:
+      tags:
+        - FAQs
+      summary: Reemplazar completamente una o varias FAQs
+      description: |
+        Reemplaza FAQs usando filtros. Para reemplazar una específica, usa id_faq=eq.{id}
+        Ejemplo: PUT /faqs?id_faq=eq.1
+      operationId: replaceFAQs
+      parameters:
+        - name: id_faq
+          in: query
+          required: true
+          description: "Filtrar por ID de la FAQ (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FAQInsert'
+      responses:
+        '200':
+          description: FAQ(s) actualizada(s) exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FAQ'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    delete:
+      tags:
+        - FAQs
+      summary: Eliminar una o varias FAQs
+      description: |
+        Elimina FAQs usando filtros. Para eliminar una específica, usa id_faq=eq.{id}
+        Ejemplo: DELETE /faqs?id_faq=eq.1
+      operationId: deleteFAQs
+      parameters:
+        - name: id_faq
+          in: query
+          required: true
+          description: "Filtrar por ID de la FAQ (ej: eq.1)"
+          schema:
+            type: string
+          example: "eq.1"
+      responses:
+        '204':
+          description: FAQ(s) eliminada(s) exitosamente
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
 components:
   securitySchemes:
@@ -551,6 +1072,10 @@ components:
         - empresa
         - tipo_promocion
       properties:
+        id_sponsor:
+          type: integer
+          format: int64
+          description: Opcional - Se genera automáticamente si no se proporciona
         nombres:
           type: string
         apellidos:
@@ -569,9 +1094,14 @@ components:
         mensaje:
           type: string
           nullable: true
+        created_at:
+          type: string
+          format: date-time
+          description: Opcional - Se genera automáticamente si no se proporciona
 
     SponsorUpdate:
       type: object
+      description: Todos los campos son opcionales para actualización parcial
       properties:
         nombres:
           type: string
@@ -631,6 +1161,41 @@ components:
         - apellidos
         - email
         - area_interes
+      properties:
+        id_volunteer:
+          type: integer
+          format: int64
+          description: Opcional - Se genera automáticamente
+        nombres:
+          type: string
+        apellidos:
+          type: string
+        email:
+          type: string
+          format: email
+        celular:
+          type: string
+          nullable: true
+        universidad:
+          type: string
+          nullable: true
+        ciclo:
+          type: string
+          nullable: true
+        carrera:
+          type: string
+          nullable: true
+        area_interes:
+          type: string
+          enum: [PMO, MKT, LOGISTICA, SIGE, GTH, TI]
+        created_at:
+          type: string
+          format: date-time
+          description: Opcional - Se genera automáticamente
+
+    VolunteerUpdate:
+      type: object
+      description: Todos los campos son opcionales para actualización parcial
       properties:
         nombres:
           type: string
@@ -692,6 +1257,38 @@ components:
         - date
         - category
       properties:
+        id_news:
+          type: integer
+          format: int64
+          description: Opcional - Se genera automáticamente
+        title:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        content:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date
+        category:
+          type: string
+          enum: [PROYECTOS, COMUNIDAD, NOTICIAS]
+        created_at:
+          type: string
+          format: date-time
+          description: Opcional - Se genera automáticamente
+
+    NewsItemUpdate:
+      type: object
+      description: Todos los campos son opcionales para actualización parcial
+      properties:
         title:
           type: string
         slug:
@@ -738,6 +1335,30 @@ components:
       required:
         - title
       properties:
+        id_award:
+          type: integer
+          format: int64
+          description: Opcional - Se genera automáticamente
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        year:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          description: Opcional - Se genera automáticamente
+
+    AwardUpdate:
+      type: object
+      description: Todos los campos son opcionales para actualización parcial
+      properties:
         title:
           type: string
         description:
@@ -772,6 +1393,25 @@ components:
         - question
         - answer
         - order_num
+      properties:
+        id_faq:
+          type: integer
+          format: int64
+          description: Opcional - Se genera automáticamente
+        question:
+          type: string
+        answer:
+          type: string
+        order_num:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          description: Opcional - Se genera automáticamente
+
+    FAQUpdate:
+      type: object
+      description: Todos los campos son opcionales para actualización parcial
       properties:
         question:
           type: string
