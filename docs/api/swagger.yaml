@@ -465,7 +465,7 @@ paths:
             default: "date.desc"
         - name: category
           in: query
-          description: "Filtrar por categoría (ej: eq.NOTICIAS, in.(NOTICIAS,PROYECTOS))"
+          description: "Filtrar por categoría (ej: eq.Noticias, in.(Noticias,Proyectos))"
           schema:
             type: string
         - name: limit
@@ -511,7 +511,7 @@ paths:
               content: "Contenido completo del artículo..."
               image_url: "/images/News/noticia-ejemplo.jpg"
               date: "2025-01-15"
-              category: "NOTICIAS"
+              category: "Noticias"
       responses:
         '201':
           description: Noticia creada exitosamente
@@ -1244,7 +1244,7 @@ components:
           format: date
         category:
           type: string
-          enum: [PROYECTOS, COMUNIDAD, NOTICIAS]
+          enum: [Proyectos, Noticias, Eventos]
         created_at:
           type: string
           format: date-time
@@ -1279,7 +1279,7 @@ components:
           format: date
         category:
           type: string
-          enum: [PROYECTOS, COMUNIDAD, NOTICIAS]
+          enum: [Proyectos, Noticias, Eventos]
         created_at:
           type: string
           format: date-time
@@ -1307,7 +1307,7 @@ components:
           format: date
         category:
           type: string
-          enum: [PROYECTOS, COMUNIDAD, NOTICIAS]
+          enum: [Proyectos, Noticias, Eventos]
 
     Award:
       type: object
