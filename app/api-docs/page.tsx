@@ -1,16 +1,21 @@
 'use client'
+
 import { useEffect, useState } from 'react'
-import SwaggerUI from 'swagger-ui-react'
+import dynamic from 'next/dynamic'
 import 'swagger-ui-react/swagger-ui.css'
 
+const SwaggerUI = dynamic(
+  () => import('swagger-ui-react'),
+  { ssr: false }
+)
+
 export default function ApiDocs() {
-  const [swaggerDoc, setSwaggerDoc] = useState(null)
+  const [swaggerDoc, setSwaggerDoc] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Cargar desde el route API que parsea el YAML
     fetch('/api/swagger')
       .then(async (res) => {
         if (!res.ok) {
@@ -52,32 +57,42 @@ export default function ApiDocs() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-2xl">
-          <h2 className="text-red-800 font-bold text-xl mb-2">Error al cargar la documentación</h2>
+          <h2 className="text-red-800 font-bold text-xl mb-2">
+            Error al cargar la documentación
+          </h2>
           <p className="text-red-600 mb-2 font-semibold">{error}</p>
+
           {errorDetails?.message && (
             <p className="text-red-700 mb-2">
               <strong>Detalle:</strong> {errorDetails.message}
             </p>
           )}
+
           {errorDetails?.line && errorDetails.line !== 'N/A' && (
             <p className="text-red-700 mb-2">
               <strong>Línea:</strong> {errorDetails.line}
             </p>
           )}
+
           {errorDetails?.hint && (
-            <p className="text-sm text-gray-600 mb-2 italic">{errorDetails.hint}</p>
+            <p className="text-sm text-gray-600 mb-2 italic">
+              {errorDetails.hint}
+            </p>
           )}
+
           <p className="text-sm text-gray-600 mt-4">
-            Verifica que el archivo <code className="bg-gray-200 px-1 rounded">docs/api/swagger.yaml</code> existe y está correctamente formateado.
+            Verifica que el archivo{' '}
+            <code className="bg-gray-200 px-1 rounded">
+              docs/api/swagger.yaml
+            </code>{' '}
+            existe y está correctamente formateado.
           </p>
         </div>
       </div>
     )
   }
 
-  if (!swaggerDoc) {
-    return null
-  }
+  if (!swaggerDoc) return null
 
   return (
     <div className="min-h-screen bg-gray-50">
