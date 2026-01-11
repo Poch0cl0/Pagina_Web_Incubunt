@@ -24,7 +24,6 @@ export const News: React.FC = () => {
 
     const handleNavigation = (path: string) => {
         router.push(path);
-        // window.scrollTo(0, 0); // Next.js handles scroll automatically usually
     };
 
     return (

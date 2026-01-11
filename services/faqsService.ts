@@ -1,20 +1,23 @@
 import { supabase } from '@/lib/supabase'
 import type { FAQ } from '@/types/database.types'
-import { MOCK_FAQS } from '@/utils/mockData'
+import { questionsData } from '@/components/sections/faqs/data/questions'
 
 export const faqsService = {
   async getAll(): Promise<FAQ[]> {
-    try {
-      const { data, error } = await supabase
-        .from('faqs')
-        .select('*')
-        .order('order_num', { ascending: true })
+    const { data, error } = await supabase
+      .from('faqs')
+      .select('*')
+      .order('order_num', { ascending: true })
 
-      if (error) throw error
-      return data || []
-    } catch (error) {
-      console.error("Error fetching FAQs:", error)
-      return MOCK_FAQS
+    if (error || !data || data.length === 0) {
+      return questionsData.map((q, index) => ({
+        id_faq: index + 1,
+        question: q.question,
+        answer: q.answer,
+        order_num: index + 1,
+        created_at: new Date().toISOString()
+      })) as FAQ[]
     }
+    return data || []
   }
 }

@@ -5,6 +5,7 @@ import { Footer } from "@/components/shared/components/Footer/Footer";
 import Navbar from "@/components/shared/components/Navbar/Navbar";
 import { newsService } from "@/services/newsService";
 import type { NewsItem } from "@/types/database.types";
+import ConstructionState from "@/components/shared/ConstructionState";
 
 const AllCom: React.FC = () => {
     const router = useRouter();
@@ -25,9 +26,9 @@ const AllCom: React.FC = () => {
     return (
         <>
             <Navbar />
-            <section className="relative max-w-[1600px] mx-auto bg-gray-50">
-                <div className="absolute top-0 left-0 w-full h-[380px] bg-gradient-to-r from-amber-500 to-yellow-600 z-0" />
-                <div className="relative z-10">
+            <section className="relative max-w-[1980px] mx-auto h-[100vh] bg-gray-50">
+                <div className="absolute top-0 left-0 w-full h-[100vh] bg-gradient-to-r from-amber-500 to-yellow-600 z-0" />
+                <div className="relative z-10 h-full flex flex-col">
                     <div className="flex justify-between items-center mb-10 text-white border-b border-white">
                         <div className="flex items-center space-x-3 px-6">
                             <img width="50" height="50" src="https://img.icons8.com/stickers/50/crowd.png" alt="crowd" />
@@ -42,27 +43,35 @@ const AllCom: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-10 py-4">
-                        {news.map((item) => (
-                            <div key={item.id_news} className="bg-[#1d1f20] text-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-transform transform hover:-translate-y-1" >
-                                <img
-                                    src={item.image_url || "/images/placeholder.png"}
-                                    alt={item.title}
-                                    className="w-full h-48 object-cover"
-                                />
-                                <div className="p-5">
-                                    <p className="text-sm text-gray-400 mb-2">{item.date}</p>
-                                    <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-                                    <p className="text-gray-300 text-sm mb-4 line-clamp-3">
-                                        {item.description}
-                                    </p>
-                                    <button onClick={() => router.push(`/noticias/${item.slug}`)} className="bg-white text-blue-700 font-semibold px-5 py-2 rounded-full hover:bg-blue-100 transition flex items-center space-x-2">
-                                        <span>Leer más</span>
-                                        <img src="/icons/icon-arrow-right.svg" alt="Flecha" className="w-4 h-4" />
-                                    </button>
-                                </div>
+
+
+                    <div className={`px-10 py-4 ${news.length === 0 ? 'flex-1 flex items-center justify-center' : ''}`}>
+                        {news.length === 0 ? (
+                            <ConstructionState />
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                                {news.map((item) => (
+                                    <div key={item.id_news} className="bg-[#1d1f20] text-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-transform transform hover:-translate-y-1" >
+                                        <img
+                                            src={item.image_url || "/images/placeholder.png"}
+                                            alt={item.title}
+                                            className="w-full h-48 object-cover"
+                                        />
+                                        <div className="p-5">
+                                            <p className="text-sm text-gray-400 mb-2">{item.date}</p>
+                                            <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
+                                            <p className="text-gray-300 text-sm mb-4 line-clamp-3">
+                                                {item.description}
+                                            </p>
+                                            <button onClick={() => router.push(`/noticias/${item.slug}`)} className="bg-white text-blue-700 font-semibold px-5 py-2 rounded-full hover:bg-blue-100 transition flex items-center space-x-2">
+                                                <span>Leer más</span>
+                                                <img src="/icons/icon-arrow-right.svg" alt="Flecha" className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </section>

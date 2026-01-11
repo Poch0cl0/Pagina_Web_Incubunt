@@ -1,15 +1,5 @@
 import { supabase } from '@/lib/supabase'
-
-interface VolunteerInsert {
-  nombres: string
-  apellidos: string
-  email: string
-  celular: string | null
-  universidad: string | null
-  ciclo: string | null
-  carrera: string | null
-  area_interes: 'PMO' | 'MKT' | 'LOGISTICA' | 'SIGE' | 'GTH' | 'TI'
-}
+import type { VolunteerInsert } from '@/types/database.types'
 
 export const sendVolunteerData = async (data: {
   nombres: string

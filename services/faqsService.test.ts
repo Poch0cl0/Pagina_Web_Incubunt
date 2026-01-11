@@ -14,8 +14,8 @@ jest.mock('@/lib/supabase', () => ({
 
 describe('faqsService', () => {
     const mockFAQs = [
-        { id: 1, question: 'Q1', answer: 'A1', order_num: 1 },
-        { id: 2, question: 'Q2', answer: 'A2', order_num: 2 }
+        { id_faq: 1, question: 'Q1', answer: 'A1', order_num: 1 },
+        { id_faq: 2, question: 'Q2', answer: 'A2', order_num: 2 }
     ]
 
     beforeEach(() => {
@@ -37,12 +37,21 @@ describe('faqsService', () => {
         expect(result).toEqual(mockFAQs)
     })
 
-    test('getAll lanza error si supabase falla', async () => {
-        const mockError = { message: 'Error', code: '500' }
-        const orderMock = jest.fn().mockResolvedValue({ data: null, error: mockError })
-        // @ts-ignore
-        supabase.from = jest.fn(() => ({ select: jest.fn(() => ({ order: orderMock })) }))
+    it("getAll devuelve datos locales si supabase falla", async () => {
+        // Mock de error
+        const mockError = { message: "Error de conexión", details: "", hint: "", code: "" }
+            ; (supabase.from as jest.Mock).mockReturnValue({
+                select: jest.fn().mockReturnValue({
+                    order: jest.fn().mockResolvedValue({ data: null, error: mockError })
+                })
+            })
 
-        await expect(faqsService.getAll()).rejects.toEqual(mockError)
+        const result = await faqsService.getAll()
+
+        // Verificar que se retornan datos
+        expect(result).toBeDefined()
+        expect(Array.isArray(result)).toBe(true)
+        expect(result.length).toBeGreaterThan(0)
+        expect(result[0]).toHaveProperty('question')
     })
 })

@@ -70,6 +70,8 @@ export const Awards = () => {
                 </h2>
             </div>
 
+            {/* Contenido principal */}
+
             {/* Carrusel móvil */}
             <AwardMobileCarousel
                 awards={awards}

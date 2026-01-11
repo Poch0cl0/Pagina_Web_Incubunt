@@ -1,14 +1,5 @@
 import { supabase } from '@/lib/supabase'
-
-interface SponsorInsert {
-  nombres: string
-  apellidos: string
-  email: string
-  celular: string | null
-  empresa: string
-  tipo_promocion: 'Auspiciador' | 'Sponsor'
-  mensaje: string | null
-}
+import type { SponsorInsert } from '@/types/database.types'
 
 export const sendSponsorData = async (data: {
   Nombres: string

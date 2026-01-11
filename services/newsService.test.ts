@@ -14,7 +14,7 @@ describe('newsService', () => {
     })
 
     test('getAll devuelve noticias ordenadas por fecha', async () => {
-        const mockData = [{ id: 1, title: 'News 1' }]
+        const mockData = [{ id_news: 1, title: 'News 1' }]
         const orderMock = jest.fn().mockResolvedValue({ data: mockData, error: null })
         const selectMock = jest.fn().mockReturnValue({ order: orderMock })
         const fromMock = jest.fn().mockReturnValue({ select: selectMock })
@@ -24,13 +24,13 @@ describe('newsService', () => {
 
         const result = await newsService.getAll()
 
-        expect(fromMock).toHaveBeenCalledWith('news_items')
+        expect(fromMock).toHaveBeenCalledWith('news')
         expect(orderMock).toHaveBeenCalledWith('date', { ascending: false })
         expect(result).toEqual(mockData)
     })
 
     test('getByCategory filtra por categoría', async () => {
-        const mockData = [{ id: 1, category: 'PROYECTOS' }]
+        const mockData = [{ id_news: 1, category: 'PROYECTOS' }]
         const orderMock = jest.fn().mockResolvedValue({ data: mockData, error: null })
         const eqMock = jest.fn().mockReturnValue({ order: orderMock })
         const selectMock = jest.fn().mockReturnValue({ eq: eqMock })
@@ -46,7 +46,7 @@ describe('newsService', () => {
     })
 
     test('getBySlug devuelve una noticia única', async () => {
-        const mockItem = { id: 1, slug: 'news-1' }
+        const mockItem = { id_news: 1, slug: 'news-1' }
         const singleMock = jest.fn().mockResolvedValue({ data: mockItem, error: null })
         const eqMock = jest.fn().mockReturnValue({ single: singleMock })
         const selectMock = jest.fn().mockReturnValue({ eq: eqMock })

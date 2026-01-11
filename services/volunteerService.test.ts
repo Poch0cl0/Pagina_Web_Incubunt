@@ -22,7 +22,7 @@ describe('volunteerService', () => {
             celular: '987654321'
         }
 
-        const mockResponse = { id: 1, ...inputData }
+        const mockResponse = { id_volunteer: 1, ...inputData }
         const singleMock = jest.fn().mockResolvedValue({ data: mockResponse, error: null })
         const selectMock = jest.fn().mockReturnValue({ single: singleMock })
         const insertMock = jest.fn().mockReturnValue({ select: selectMock })
